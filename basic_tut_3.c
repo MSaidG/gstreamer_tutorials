@@ -74,9 +74,9 @@ int main(int argc, char **argv) {
   }
 
   GstBus *bus = gst_element_get_bus(data.pipeline);
+  GstMessage *msg;
 
   gboolean terminate = FALSE;
-  GstMessage *msg;
   while (!terminate) {
     msg = gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE,
                                      GST_MESSAGE_STATE_CHANGED |
