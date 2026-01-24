@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 project(MultiFileProject C)
 
 # 1. Find GStreamer (since you are working with it)
@@ -6,7 +6,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(GST REQUIRED gstreamer-1.0)
 
 # 2. Get a list of all .c files in the current directory
-file(GLOB SOURCE_FILES "*.c")
+file(GLOB SOURCE_FILES CONFIGURE DEPENDS "*.c")
 
 # 3. Loop through each file
 foreach(SOURCE_FILE ${SOURCE_FILES})
