@@ -33,7 +33,7 @@ void add_stream_to_compositor(GstElement *pipeline, GstElement *compositor,
   filesrc = gst_element_factory_make("filesrc", NULL);
   demuxer = gst_element_factory_make("qtdemux", NULL);
   parser = gst_element_factory_make("h264parse", NULL);
-  decoder = gst_element_factory_make("omxh264dec", NULL);
+  decoder = gst_element_factory_make("omxh264dec", NULL); // v4l2h264dec
   scaler = gst_element_factory_make("videoscale", NULL);
   capsfilter = gst_element_factory_make("capsfilter", NULL);
   queue = gst_element_factory_make("queue", NULL);

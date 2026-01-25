@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 
   GstElement *pipeline = gst_pipeline_new("video-grid-pipeline");
   GstElement *compositor = gst_element_factory_make("compositor", "comp");
-  GstElement *sink = gst_element_factory_make("autovideosink", "sink");
+  GstElement *sink = gst_element_factory_make("kmssink", "sink");
 
   if (!sink) {
     g_printerr("Sink creation failed!\n");
