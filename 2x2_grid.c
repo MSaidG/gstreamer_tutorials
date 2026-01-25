@@ -1,3 +1,4 @@
+#include <glib.h>
 #include <gst/gst.h>
 #include <stdio.h>
 
@@ -46,10 +47,10 @@ void add_stream_to_compositor(GstElement *pipeline, GstElement *compositor,
 
   g_object_set(filesrc, "location", filename, NULL);
   // Nearest Neighbour
-  g_object_set(scaler, "method", 0, NULL); 
+  g_object_set(scaler, "method", 0, NULL);
   g_object_set(scaler, "add-borders", FALSE, NULL);
   // GST_VIDEO_DITHER_NONE
-  g_object_set(scaler, "dither", 0, NULL); 
+  g_object_set(scaler, "dither", 0, NULL);
   // GST_VIDEO_RESAMPLER_METHOD_NEAREST
   g_object_set(scaler, "chroma-resampler", 0, NULL);
 
@@ -84,20 +85,31 @@ void add_stream_to_compositor(GstElement *pipeline, GstElement *compositor,
   gst_object_unref(comp_sink_pad);
 }
 
+static void on_fps(GstElement *fpssink, gdouble fps, gdouble droprate,
+                   gdouble avgfps, gpointer user_data) {
+  g_print("FPS: %6.2f | AVG: %6.2f | DROP: %5.2f %%\n", fps, avgfps,
+          droprate * 100.0);
+}
+
 int main(int argc, char *argv[]) {
+
+  gst_debug_set_threshold_for_name("fpsdisplaysink", GST_LEVEL_TRACE);
   gst_init(&argc, &argv);
 
   GstElement *pipeline = gst_pipeline_new("video-grid-pipeline");
   GstElement *compositor = gst_element_factory_make("compositor", "comp");
-  GstElement *sink = gst_element_factory_make("kmssink", "sink");
+  GstElement *sink = gst_element_factory_make("fpsdisplaysink", "sink");
+  GstElement *video_sink = gst_element_factory_make("kmssink", "sink");
 
   if (!pipeline || !compositor || !sink) {
     g_printerr("Not all top-level elements could be created.\n");
     return -1;
   }
 
-  g_object_set(sink, "bus-id", "fd4a0000.display", NULL);
-  g_object_set(sink, "sync", FALSE, NULL);
+  g_object_set(video_sink, "qos", TRUE, NULL);
+  g_object_set(sink, "sync", TRUE, "video-sink", video_sink, "text-overlay",
+               FALSE, "signal-fps-measurements", TRUE, NULL);
+  g_signal_connect(sink, "fps-measurements", G_CALLBACK(on_fps), NULL);
 
   gst_bin_add_many(GST_BIN(pipeline), compositor, sink, NULL);
 
@@ -141,6 +153,8 @@ int main(int argc, char *argv[]) {
     case GST_MESSAGE_EOS:
       g_print("End-Of-Stream reached.\n");
       break;
+    case GST_MESSAGE_QOS:
+      g_print("QoS drop at sink (Display bottlneck)\n");
     default:
       break;
     }

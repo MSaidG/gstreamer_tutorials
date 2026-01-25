@@ -1,6 +1,5 @@
-#include "glib.h"
-#include "glibconfig.h"
-#include "gst/gstvalue.h"
+#include "gst/gstmessage.h"
+#include <glib.h>
 #include <gst/gst.h>
 #include <stdio.h>
 
@@ -28,7 +27,8 @@ static void on_pad_added(GstElement *element, GstPad *pad, gpointer data) {
 void add_stream_to_compositor(GstElement *pipeline, GstElement *compositor,
                               const char *filename, int xpos, int ypos) {
 
-  GstElement *filesrc, *demuxer, *parser, *decoder, *scaler, *capsfilter, *queue;
+  GstElement *filesrc, *demuxer, *parser, *decoder, *scaler, *capsfilter,
+      *queue;
   filesrc = gst_element_factory_make("filesrc", NULL);
   demuxer = gst_element_factory_make("qtdemux", NULL);
   parser = gst_element_factory_make("h264parse", NULL);
@@ -45,10 +45,10 @@ void add_stream_to_compositor(GstElement *pipeline, GstElement *compositor,
 
   g_object_set(filesrc, "location", filename, NULL);
   // Nearest Neighbour
-  g_object_set(scaler, "method", 0, NULL); 
+  g_object_set(scaler, "method", 0, NULL);
   g_object_set(scaler, "add-borders", FALSE, NULL);
   // GST_VIDEO_DITHER_NONE
-  g_object_set(scaler, "dither", 0, NULL); 
+  g_object_set(scaler, "dither", 0, NULL);
   // GST_VIDEO_RESAMPLER_METHOD_NEAREST
   g_object_set(scaler, "chroma-resampler", 0, NULL);
 
@@ -81,12 +81,22 @@ void add_stream_to_compositor(GstElement *pipeline, GstElement *compositor,
   gst_object_unref(comp_sink_pad);
 }
 
+static void on_fps(GstElement *fpssink, gdouble fps, gdouble droprate,
+                   gdouble avgfps, gpointer user_data) {
+  g_print("FPS: %6.2f | AVG: %6.2f | DROP: %5.2f %%\n", fps, avgfps,
+          droprate * 100.0);
+}
+
 int main(int argc, char *argv[]) {
+  // gst_debug_set_default_threshold(GST_LEVEL_WARNING);
+  // g_setenv("GST_DEBUG", "fpsdisplaysink:4", TRUE);
+  // gst_debug_set_threshold_for_name("fpsdisplaysink", GST_LEVEL_TRACE);
   gst_init(&argc, &argv);
 
   GstElement *pipeline = gst_pipeline_new("video-grid-pipeline");
   GstElement *compositor = gst_element_factory_make("compositor", "comp");
-  GstElement *sink = gst_element_factory_make("kmssink", "sink");
+  GstElement *sink = gst_element_factory_make("fpsdisplaysink", "sink");
+  GstElement *video_sink = gst_element_factory_make("kmssink", "sink");
 
   if (!sink) {
     g_printerr("Sink creation failed!\n");
@@ -101,7 +111,10 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  g_object_set(sink, "sync", TRUE, NULL);
+  g_object_set(video_sink, "qos", TRUE, NULL);
+  g_object_set(sink, "sync", TRUE, "video-sink", video_sink, "text-overlay",
+               FALSE, "signal-fps-measurements", TRUE, NULL);
+  g_signal_connect(sink, "fps-measurements", G_CALLBACK(on_fps), NULL);
 
   gst_bin_add_many(GST_BIN(pipeline), compositor, sink, NULL);
   if (!gst_element_link(compositor, sink)) {
@@ -111,7 +124,7 @@ int main(int argc, char *argv[]) {
   }
 
   add_stream_to_compositor(pipeline, compositor, "videos/animals.mp4", 0, 0);
-  add_stream_to_compositor(pipeline, compositor, "videos/earth.mp4", 960, 0);
+  add_stream_to_compositor(pipeline, compositor, "videos/earth1.mp4", 960, 0);
   add_stream_to_compositor(pipeline, compositor, "videos/ocean.mp4", 0, 540);
   add_stream_to_compositor(pipeline, compositor, "videos/galaxy.mp4", 960, 540);
 
@@ -154,6 +167,8 @@ int main(int argc, char *argv[]) {
                 gst_element_state_get_name(new_state));
       }
       break;
+    case GST_MESSAGE_QOS:
+      g_print("QoS drop at sink (Display bottlneck)\n");
     default:
       break;
     }
