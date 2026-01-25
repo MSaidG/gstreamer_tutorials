@@ -46,12 +46,10 @@ void add_stream_to_compositor(GstElement *pipeline, GstElement *compositor,
   }
 
   g_object_set(filesrc, "location", filename, NULL);
-  // Nearest Neighbour
+  
   g_object_set(scaler, "method", 0, NULL);
   g_object_set(scaler, "add-borders", FALSE, NULL);
-  // GST_VIDEO_DITHER_NONE
   g_object_set(scaler, "dither", 0, NULL);
-  // GST_VIDEO_RESAMPLER_METHOD_NEAREST
   g_object_set(scaler, "chroma-resampler", 0, NULL);
 
   GstCaps *caps = gst_caps_new_simple(

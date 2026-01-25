@@ -1,4 +1,3 @@
-#include "gst/gstmessage.h"
 #include <glib.h>
 #include <gst/gst.h>
 #include <stdio.h>
@@ -44,17 +43,14 @@ void add_stream_to_compositor(GstElement *pipeline, GstElement *compositor,
   }
 
   g_object_set(filesrc, "location", filename, NULL);
-  // Nearest Neighbour
+  
   g_object_set(scaler, "method", 0, NULL);
   g_object_set(scaler, "add-borders", FALSE, NULL);
-  // GST_VIDEO_DITHER_NONE
   g_object_set(scaler, "dither", 0, NULL);
-  // GST_VIDEO_RESAMPLER_METHOD_NEAREST
   g_object_set(scaler, "chroma-resampler", 0, NULL);
 
   GstCaps *caps = gst_caps_new_simple(
-      "video/x-raw", "width", G_TYPE_INT, 960, "height", G_TYPE_INT, 540,
-      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
+      "video/x-raw", "width", G_TYPE_INT, 960, "height", G_TYPE_INT, 540, NULL);
   g_object_set(capsfilter, "caps", caps, NULL);
   gst_caps_unref(caps);
 
@@ -76,6 +72,7 @@ void add_stream_to_compositor(GstElement *pipeline, GstElement *compositor,
   if (gst_pad_link(queue_src_pad, comp_sink_pad) != GST_PAD_LINK_OK) {
     g_printerr("Failed to link queue to compositor.\n");
   }
+
 
   gst_object_unref(queue_src_pad);
   gst_object_unref(comp_sink_pad);
