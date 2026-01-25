@@ -1,0 +1,162 @@
+gst-launch-1.0 videotestsrc pattern=ball ! video/x-raw,width=1920,height=1080 ! videoconvert ! fbdevsink
+
+gst-launch-1.0 filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoconvert ! fbdevsink
+
+KMSSINK SETUP ---------------------------------------------------------------------------------------------------------------------->
+LINK:https://adaptivesupport.amd.com/s/article/Linux-video?language=en_US
+
+zcu106-simple-video-pipe:~$ ls /dev/dri/by-path/
+platform-fd4a0000.display-card
+zcu106-simple-video-pipe:~$
+zcu106-simple-video-pipe:~$ modetest -D fd4a0000.display
+
+The connector ID is 42
+11 modes are available
+The CRTC ID is 40
+We have 2 planes:
+Plane ID 36: This is the primary plane used to display boot information
+Plane ID 33: Overlay plane. We can use this plane to display the stream from the TPG
+
+modetest -D fd4a0000.display -s 42:1920x1080-60.00@BG24
+modetest -D fd4a0000.display -w 36:"alpha":0
+modetest -D fd4a0000.display -P 33@40:1920x1080@BG24
+media-ctl -v -d /dev/media0 -V "\"a0010000.v_tpg\":0 [fmt:RGB888_1X24/1920x1080 field:none]"
+modetest -D fd4a0000.display -s 42:1920x1080-60.00@BG24 -w 36:"alpha":0
+
+KMSSINK COMMANDS--------------------------------------------------------------------------------------------------------------------->
+gst-launch-1.0 -v filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! kmssink bus-id=fd4a0000.display sync=false
+WITH QUEUE
+gst-launch-1.0 filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! queue ! kmssink bus-id=fd4a0000.display sync=false
+SCALING (NOT WORKING)
+gst-launch-1.0 filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! kmssink bus-id=fd4a0000.display plane-id=39 render-rectangle="<100,100,1280,720>" sync=false
+
+PC
+gst-launch-1.0 -v filesrc location=animals.mp4 ! qtdemux ! h264parse ! vah264dec ! autovideosink sync=true
+gst-launch-1.0 compositor name=comp \
+    sink_0::xpos=0   sink_0::ypos=0 \
+    sink_1::xpos=960 sink_1::ypos=0 \
+    sink_2::xpos=0   sink_2::ypos=540 \
+    sink_3::xpos=960 sink_3::ypos=540 ! \
+    autovideosink sync=true \
+    filesrc location=animals.mp4 ! qtdemux ! h264parse ! vah264dec ! \
+    videoscale method=0 ! video/x-raw,width=960,height=540 ! \
+    tee name=t \
+    t. ! queue ! comp.sink_0 \
+    t. ! queue ! comp.sink_1 \
+    t. ! queue ! comp.sink_2 \
+    t. ! queue ! comp.sink_3
+
+gst-launch-1.0 compositor name=comp     sink_0::xpos=0   sink_0::ypos=0     sink_1::xpos=960 sink_1::ypos=0     sink_2::xpos=0   sink_2::ypos=540     sink_3::xpos=960 sink_3::ypos=540 !    autovideosink sync=true     filesrc location=animals.mp4 ! qtdemux ! h264parse ! vah264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_0     filesrc location=earth.mp4   ! qtdemux ! h264parse ! vah264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_1     filesrc location=ocean.mp4   ! qtdemux ! h264parse ! vah264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_2     filesrc location=galaxy.mp4  ! qtdemux ! h264parse ! vah264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_3
+END PC
+
+2x2 PATTERNS
+gst-launch-1.0 compositor name=comp \
+     sink_0::xpos=0   sink_0::ypos=0 \
+     sink_1::xpos=960 sink_1::ypos=0 \
+     sink_2::xpos=0   sink_2::ypos=540 \
+     sink_3::xpos=960 sink_3::ypos=540 ! \
+     kmssink bus-id=fd4a0000.display sync=false \
+     videotestsrc pattern=0 ! video/x-raw,width=960,height=540 ! comp.sink_0 \
+     videotestsrc pattern=1 ! video/x-raw,width=960,height=540 ! comp.sink_1 \
+     videotestsrc pattern=18 ! video/x-raw,width=960,height=540 ! comp.sink_2 \
+     videotestsrc pattern=13 ! video/x-raw,width=960,height=540 ! comp.sink_3
+
+
+2x2 SAME VIDEO
+gst-launch-1.0 compositor name=comp \
+    sink_0::xpos=0   sink_0::ypos=0 \
+    sink_1::xpos=960 sink_1::ypos=0 \
+    sink_2::xpos=0   sink_2::ypos=540 \
+    sink_3::xpos=960 sink_3::ypos=540 ! \
+    kmssink bus-id=fd4a0000.display sync=false \
+    filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 ! video/x-raw,width=960,height=540 ! \
+    tee name=t \
+    t. ! queue ! comp.sink_0 \
+    t. ! queue ! comp.sink_1 \
+    t. ! queue ! comp.sink_2 \
+    t. ! queue ! comp.sink_3
+
+
+2x2 4 DIFFERENT VIDEOS
+gst-launch-1.0 compositor name=comp     sink_0::xpos=0   sink_0::ypos=0     sink_1::xpos=960 sink_1::ypos=0     sink_2::xpos=0   sink_2::ypos=540     sink_3::xpos=960 sink_3::ypos=540 !     kmssink bus-id=fd4a0000.display sync=false     filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_0     filesrc location=earth.mp4   ! qtdemux ! h264parse ! omxh264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_1     filesrc location=ocean.mp4   ! qtdemux ! h264parse ! omxh264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_2     filesrc location=galaxy.mp4  ! qtdemux ! h264parse ! omxh264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_3
+
+
+3x3 DIFFERENT VIDEOS
+gst-launch-1.0 compositor name=comp \
+    sink_0::xpos=0    sink_0::ypos=0 \
+    sink_1::xpos=640  sink_1::ypos=0 \
+    sink_2::xpos=1280 sink_2::ypos=0 \
+    sink_3::xpos=0    sink_3::ypos=360 \
+    sink_4::xpos=640  sink_4::ypos=360 \
+    sink_5::xpos=1280 sink_5::ypos=360 \
+    sink_6::xpos=0    sink_6::ypos=720 \
+    sink_7::xpos=640  sink_7::ypos=720 \
+    sink_8::xpos=1280 sink_8::ypos=720 ! \
+    kmssink bus-id=fd4a0000.display sync=false \
+    filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 ! video/x-raw,width=640,height=360 ! tee name=t1 \
+    t1. ! queue ! comp.sink_0 \
+    t1. ! queue ! comp.sink_3 \
+    t1. ! queue ! comp.sink_6 \
+    filesrc location=ocean.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 ! video/x-raw,width=640,height=360 ! tee name=t2 \
+    t2. ! queue ! comp.sink_1 \
+    t2. ! queue ! comp.sink_4 \
+    t2. ! queue ! comp.sink_7 \
+    filesrc location=galaxy.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 ! video/x-raw,width=640,height=360 ! tee name=t3 \
+    t3. ! queue ! comp.sink_2 \
+    t3. ! queue ! comp.sink_5 \
+    t3. ! queue ! comp.sink_8
+
+
+1. Method 1 (Bilinear Scaling) (Default) = By default, videoscale uses Bilinear Interpolation. To resize an image from 1080p to 360p, the CPU has to look at a block of pixels say, 4 neighboring pixels, mix their colors together mathematically to find average color, and then write that new pixel.
+
+2. Method 0 (Nearest Neighbor) = The CPU stops doing math completely. Instead of averaging pixels, it simply picks one and throws the rest away.
+
+--------------------------------------------------------------------------------------------------------------------------------------<
+
+
+    gst-launch-1.0 compositor name=comp \
+    sink_0::xpos=0   sink_0::ypos=0 \
+    sink_1::xpos=960 sink_1::ypos=0 \
+    sink_2::xpos=0   sink_2::ypos=540 \
+    sink_3::xpos=960 sink_3::ypos=540 ! \
+    videoconvert ! fbdevsink \
+    filesrc location=earth.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale ! video/x-raw,width=960,height=540 ! comp.sink_0 \
+    filesrc location=galaxy.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale ! video/x-raw,width=960,height=540 ! comp.sink_1 \
+    filesrc location=ocean.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale ! video/x-raw,width=960,height=540 ! comp.sink_2 \
+    filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale ! video/x-raw,width=960,height=540 ! comp.sink_3
+
+v4l2sink
+fbdevsink
+kmssink
+playbin
+autovideosink
+glupload ! glcolorconvert ! glimagesinkelement ! glimagesink
+
+ximagesink
+A standard RGB only X-based video sink. It implements the VideoOverlay interface, so the video window can be re-parented (embedded inside other windows). It does not support scaling or color formats other than RGB; it has to be performed by different means (using the videoscale element, for example).
+
+xvimagesink
+An X-based video sink, using the X Video Extension (Xv). It implements the VideoOverlay interface, so the video window can be re-parented (embedded inside other windows). It can perform scaling efficiently, on the GPU. It is only available if the hardware and corresponding drivers support the Xv extension.
+
+openslessink
+This is the only audio sink available to GStreamer on Android. It is based on OpenSL ES.
+
+openslessrc
+This is the only audio source available to GStreamer on Android. It is based on OpenSL ES.
+
+
+TESTING
+
+gst-launch-1.0 compositor name=comp     sink_0::xpos=0   sink_0::ypos=0     sink_1::xpos=960 sink_1::ypos=0     sink_2::xpos=0   sink_2::ypos=540     sink_3::xpos=960 sink_3::ypos=540 !
+autovideosink sync=false
+filesrc location=animals.mp4 ! qtdemux ! h264parse ! v4l2 !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_0
+filesrc location=earth.mp4   ! qtdemux ! h264parse ! v4l2 !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_1
+filesrc location=ocean.mp4   ! qtdemux ! h264parse ! v4l2 !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_2
+filesrc location=galaxy.mp4  ! qtdemux ! h264parse ! v4l2 !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_3
+
+
+

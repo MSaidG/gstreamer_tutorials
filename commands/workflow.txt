@@ -1,0 +1,38 @@
+CARD
+-> Z7-P V2.1 AMD Zynq™ US+ MPSoC XCZU7EV
+-> https://www.en.alinx.com/Product/SoC-Development-Boards/Zynq-UltraScale-plus-MPSoC/Z7-P.html
+
+
+ONE TIME -> ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" root@192.168.10.2
+
+CROSS COMPILE
+╰─ emulate bash -c "source environment-setup-cortexa72-cortexa53-xilinx-linux"
+╰─ cd ..
+╰─ cd gstreamer_app
+╰─ emulate bash -c "${CC} test.c -o test $(pkg-config --cflags --libs gstreamer-1.0 gstreamer-app-1.0)"
+
+FOR SERIAL CONNECTION
+╰─ sudo dmesg | grep usb
+╰─ sudo putty -> serial, 115200
+╰─ ssh-keygen -R 192.168.10.2
+
+
+
+SET STATIC IP
+sudo ip addr flush dev eno1
+sudo ip addr add 192.168.10.1/24 dev eno1
+sudo ip link set eno1 up
+
+CONNECT TO XILINX BOARD
+╰─ ssh-keygen -R 192.168.10.2
+╰─ ssh root@192.168.10.2
+
+
+SEND FILE TO XILINX BOARD
+# Syntax: scp <path_to_local_file> <username>@<board_ip>:<destination_folder>
+scp gstreamer_app/test root@192.168.10.2:/home/root/
+
+INSIDE THE XILINX BOARD
+root@simplevideopipe:~# ls -l /dev | grep video
+root@simplevideopipe:~# ls -l /dev/dri
+root@simplevideopipe:~# ls -l /dev/dri/by-path/
