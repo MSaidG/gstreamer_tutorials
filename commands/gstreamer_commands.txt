@@ -46,6 +46,21 @@ gst-launch-1.0 compositor name=comp \
     t. ! queue ! comp.sink_2 \
     t. ! queue ! comp.sink_3
 
+gst-launch-1.0 compositor name=comp \
+    sink_0::xpos=0   sink_0::ypos=0 \
+    sink_1::xpos=960 sink_1::ypos=0 \
+    sink_2::xpos=0   sink_2::ypos=540 \
+    sink_3::xpos=960 sink_3::ypos=540 ! \
+    autovideosink sync=true \
+    filesrc location=animals.mp4 ! qtdemux ! h264parse ! vah264dec ! \
+    videoscale method=0 ! video/x-raw,width=960,height=540,pixel-aspect-ratio=1/1 ! comp.sink_0 \
+    filesrc location=earth.mp4 ! qtdemux ! h264parse ! vah264dec ! \
+    videoscale method=0 ! video/x-raw,width=960,height=540,pixel-aspect-ratio=1/1 ! comp.sink_1 \
+    filesrc location=galaxy.mp4 ! qtdemux ! h264parse ! vah264dec ! \
+    videoscale method=0 ! video/x-raw,width=960,height=540,pixel-aspect-ratio=1/1 ! comp.sink_2 \
+    filesrc location=ocean.mp4 ! qtdemux ! h264parse ! vah264dec ! \
+    videoscale method=0 ! video/x-raw,width=960,height=540,pixel-aspect-ratio=1/1 ! comp.sink_3 \
+
 gst-launch-1.0 compositor name=comp     sink_0::xpos=0   sink_0::ypos=0     sink_1::xpos=960 sink_1::ypos=0     sink_2::xpos=0   sink_2::ypos=540     sink_3::xpos=960 sink_3::ypos=540 !    autovideosink sync=true     filesrc location=animals.mp4 ! qtdemux ! h264parse ! vah264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_0     filesrc location=earth.mp4   ! qtdemux ! h264parse ! vah264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_1     filesrc location=ocean.mp4   ! qtdemux ! h264parse ! vah264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_2     filesrc location=galaxy.mp4  ! qtdemux ! h264parse ! vah264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_3
 END PC
 
@@ -79,7 +94,7 @@ gst-launch-1.0 compositor name=comp \
 
 
 2x2 4 DIFFERENT VIDEOS
-gst-launch-1.0 compositor name=comp     sink_0::xpos=0   sink_0::ypos=0     sink_1::xpos=960 sink_1::ypos=0     sink_2::xpos=0   sink_2::ypos=540     sink_3::xpos=960 sink_3::ypos=540 !     kmssink bus-id=fd4a0000.display sync=false     filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_0     filesrc location=earth.mp4   ! qtdemux ! h264parse ! omxh264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_1     filesrc location=ocean.mp4   ! qtdemux ! h264parse ! omxh264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_2     filesrc location=galaxy.mp4  ! qtdemux ! h264parse ! omxh264dec !     videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_3
+gst-launch-1.0 compositor name=comp sink_0::xpos=0 sink_0::ypos=0 sink_1::xpos=960 sink_1::ypos=0 sink_2::xpos=0 sink_2::ypos=540 sink_3::xpos=960 sink_3::ypos=540 ! kmssink bus-id=fd4a0000.display sync=false filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_0 filesrc location=earth.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_1 filesrc location=ocean.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_2 filesrc location=galaxy.mp4  ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 add-borders=false dither=0 chroma-resampler=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_3
 
 
 3x3 DIFFERENT VIDEOS
