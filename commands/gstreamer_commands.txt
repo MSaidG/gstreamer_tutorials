@@ -130,6 +130,32 @@ gst-launch-1.0 compositor name=comp \
 
 2. Method 0 (Nearest Neighbor) = The CPU stops doing math completely. Instead of averaging pixels, it simply picks one and throws the rest away.
 
+
+FPS DISPLAY SINK
+
+gst-launch-1.0 \
+  compositor name=comp \
+    sink_0::xpos=0 sink_0::ypos=0 \
+    sink_1::xpos=960 sink_1::ypos=0 \
+    sink_2::xpos=0 sink_2::ypos=540 \
+    sink_3::xpos=960 sink_3::ypos=540 \
+  ! fpsdisplaysink video-sink="kmssink qos=true" sync=true text-overlay=false signal-fps-measurements=true \
+  filesrc location=videos/animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 add-borders=false dither=0 chroma-resampler=0 ! video/x-raw,width=960,height=540,pixel-aspect-ratio=1/1 ! queue ! comp.sink_0 \
+  filesrc location=videos/earth.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 add-borders=false dither=0 chroma-resampler=0 ! video/x-raw,width=960,height=540,pixel-aspect-ratio=1/1 ! queue ! comp.sink_1 \
+  filesrc location=videos/ocean.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 add-borders=false dither=0 chroma-resampler=0 ! video/x-raw,width=960,height=540,pixel-aspect-ratio=1/1 ! queue ! comp.sink_2 \
+  filesrc location=videos/galaxy.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 add-borders=false dither=0 chroma-resampler=0 ! video/x-raw,width=960,height=540,pixel-aspect-ratio=1/1 ! queue ! comp.sink_3
+
+  gst-launch-1.0 \
+  compositor name=comp \
+    sink_0::xpos=0   sink_0::ypos=0   sink_0::width=960 sink_0::height=540 \
+    sink_1::xpos=960 sink_1::ypos=0   sink_1::width=960 sink_1::height=540 \
+    sink_2::xpos=0   sink_2::ypos=540 sink_2::width=960 sink_2::height=540 \
+    sink_3::xpos=960 sink_3::ypos=540 sink_3::width=960 sink_3::height=540 \
+  ! fpsdisplaysink video-sink="kmssink qos=true" sync=true text-overlay=false signal-fps-measurements=true \
+  filesrc location=videos/animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! queue ! comp.sink_0 \
+  filesrc location=videos/earth1.mp4  ! qtdemux ! h264parse ! omxh264dec ! queue ! comp.sink_1 \
+  filesrc location=videos/ocean.mp4   ! qtdemux ! h264parse ! omxh264dec ! queue ! comp.sink_2 \
+  filesrc location=videos/galaxy.mp4  ! qtdemux ! h264parse ! omxh264dec ! queue ! comp.sink_3
 --------------------------------------------------------------------------------------------------------------------------------------<
 
 
