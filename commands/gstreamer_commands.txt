@@ -23,6 +23,13 @@ modetest -D fd4a0000.display -P 33@40:1920x1080@BG24
 media-ctl -v -d /dev/media0 -V "\"a0010000.v_tpg\":0 [fmt:RGB888_1X24/1920x1080 field:none]"
 modetest -D fd4a0000.display -s 42:1920x1080-60.00@BG24 -w 36:"alpha":0
 
+modetest -D fd4a0000.display -s 45:1920x1080-60.00@BG24
+modetest -D fd4a0000.display -w 41:"alpha":0
+modetest -D fd4a0000.display -P 39@43:1920x1080@BG24
+media-ctl -v -d /dev/media0 -V "\"a0010000.v_tpg\":0 [fmt:RGB888_1X24/1920x1080 field:none]"
+modetest -D fd4a0000.display -s 45:1920x1080-60.00@BG24 -w 41:"alpha":0
+
+
 KMSSINK COMMANDS--------------------------------------------------------------------------------------------------------------------->
 gst-launch-1.0 -v filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! kmssink bus-id=fd4a0000.display sync=false
 WITH QUEUE
@@ -32,6 +39,7 @@ gst-launch-1.0 filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec !
 
 PC
 gst-launch-1.0 -v filesrc location=animals.mp4 ! qtdemux ! h264parse ! vah264dec ! autovideosink sync=true
+
 gst-launch-1.0 compositor name=comp \
     sink_0::xpos=0   sink_0::ypos=0 \
     sink_1::xpos=960 sink_1::ypos=0 \
@@ -94,7 +102,8 @@ gst-launch-1.0 compositor name=comp \
 
 
 2x2 4 DIFFERENT VIDEOS
-gst-launch-1.0 compositor name=comp sink_0::xpos=0 sink_0::ypos=0 sink_1::xpos=960 sink_1::ypos=0 sink_2::xpos=0 sink_2::ypos=540 sink_3::xpos=960 sink_3::ypos=540 ! kmssink bus-id=fd4a0000.display sync=false filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_0 filesrc location=earth.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_1 filesrc location=ocean.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_2 filesrc location=galaxy.mp4  ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 add-borders=false dither=0 chroma-resampler=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_3
+gst-launch-1.0 compositor name=comp sink_0::xpos=0 sink_0::ypos=0 sink_1::xpos=960 sink_1::ypos=0 sink_2::xpos=0 sink_2::ypos=540 sink_3::xpos=960 sink_3::ypos=540 ! kmssink bus-id=fd4a0000.display sync=false filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_0 filesrc location=earth.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_1 filesrc location=ocean.mp4 ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_2 filesrc location=galaxy.mp4  ! qtdemux ! h264parse ! omxh264dec ! videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_3
+
 
 
 3x3 DIFFERENT VIDEOS
@@ -110,20 +119,228 @@ gst-launch-1.0 compositor name=comp \
     sink_8::xpos=1280 sink_8::ypos=720 ! \
     kmssink bus-id=fd4a0000.display sync=false \
     filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
-    videoscale method=0 ! video/x-raw,width=640,height=360 ! tee name=t1 \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! tee name=t1 \
     t1. ! queue ! comp.sink_0 \
     t1. ! queue ! comp.sink_3 \
     t1. ! queue ! comp.sink_6 \
     filesrc location=ocean.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
-    videoscale method=0 ! video/x-raw,width=640,height=360 ! tee name=t2 \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! tee name=t2 \
     t2. ! queue ! comp.sink_1 \
     t2. ! queue ! comp.sink_4 \
     t2. ! queue ! comp.sink_7 \
     filesrc location=galaxy.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
-    videoscale method=0 ! video/x-raw,width=640,height=360 ! tee name=t3 \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! tee name=t3 \
     t3. ! queue ! comp.sink_2 \
     t3. ! queue ! comp.sink_5 \
     t3. ! queue ! comp.sink_8
+
+3x3 DIFFERENT VIDEOS 1
+gst-launch-1.0 compositor name=comp \
+    sink_0::xpos=0    sink_0::ypos=0 \
+    sink_1::xpos=640  sink_1::ypos=0 \
+    sink_2::xpos=1280 sink_2::ypos=0 \
+    sink_3::xpos=0    sink_3::ypos=360 \
+    sink_4::xpos=640  sink_4::ypos=360 \
+    sink_5::xpos=1280 sink_5::ypos=360 \
+    sink_6::xpos=0    sink_6::ypos=720 \
+    sink_7::xpos=640  sink_7::ypos=720 \
+    sink_8::xpos=1280 sink_8::ypos=720 ! \
+    kmssink bus-id=fd4a0000.display sync=false \
+    filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! tee name=t1 \
+    t1. ! queue ! comp.sink_0 \
+    t1. ! queue ! comp.sink_3 \
+    filesrc location=earth1.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_6 \
+    filesrc location=ocean.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! tee name=t2 \
+    t2. ! queue ! comp.sink_1 \
+    t2. ! queue ! comp.sink_4 \
+    filesrc location=elephant.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_7 \
+    filesrc location=galaxy.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! tee name=t3 \
+    t3. ! queue ! comp.sink_2 \
+    t3. ! queue ! comp.sink_5 \
+    filesrc location=penguin.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_8 
+
+
+3x3 DIFFERENT VIDEOS 7 (1080p)
+gst-launch-1.0 compositor name=comp \
+    sink_0::xpos=0    sink_0::ypos=0 \
+    sink_1::xpos=640  sink_1::ypos=0 \
+    sink_2::xpos=1280 sink_2::ypos=0 \
+    sink_3::xpos=0    sink_3::ypos=360 \
+    sink_4::xpos=640  sink_4::ypos=360 \
+    sink_5::xpos=1280 sink_5::ypos=360 \
+    sink_6::xpos=0    sink_6::ypos=720 \
+    sink_7::xpos=640  sink_7::ypos=720 \
+    sink_8::xpos=1280 sink_8::ypos=720 ! \
+    kmssink bus-id=fd4a0000.display sync=false \
+    filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! tee name=t1 \
+    t1. ! queue ! comp.sink_0 \
+    t1. ! queue ! comp.sink_3 \
+    filesrc location=earth1.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_6 \
+    filesrc location=ocean.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! tee name=t2 \
+    t2. ! queue ! comp.sink_1 \
+    t2. ! queue ! comp.sink_4 \
+    filesrc location=elephant.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_7 \
+    filesrc location=galaxy.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! tee name=t3 \
+    t3. ! queue ! comp.sink_2 \
+    filesrc location=tiger.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_5 \
+    filesrc location=penguin.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_8 
+    
+3x3 VIDEOS 6 (1080p) + 3 (720p)
+gst-launch-1.0 compositor name=comp \
+    sink_0::xpos=0    sink_0::ypos=0 \
+    sink_1::xpos=640  sink_1::ypos=0 \
+    sink_2::xpos=1280 sink_2::ypos=0 \
+    sink_3::xpos=0    sink_3::ypos=360 \
+    sink_4::xpos=640  sink_4::ypos=360 \
+    sink_5::xpos=1280 sink_5::ypos=360 \
+    sink_6::xpos=0    sink_6::ypos=720 \
+    sink_7::xpos=640  sink_7::ypos=720 \
+    sink_8::xpos=1280 sink_8::ypos=720 ! \
+    kmssink bus-id=fd4a0000.display sync=false \
+    filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_0 \
+    filesrc location=cat_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_3 \
+    filesrc location=earth1.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_6 \
+    filesrc location=ocean.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_1 \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_4  \
+    filesrc location=elephant.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_7 \
+    filesrc location=galaxy.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_2 \
+    filesrc location=tiger.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_5 \
+    filesrc location=penguin_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_8 
+
+3x3 VIDEOS 5 (1080p) + 4 (720p)
+gst-launch-1.0 compositor name=comp \
+    sink_0::xpos=0    sink_0::ypos=0 \
+    sink_1::xpos=640  sink_1::ypos=0 \
+    sink_2::xpos=1280 sink_2::ypos=0 \
+    sink_3::xpos=0    sink_3::ypos=360 \
+    sink_4::xpos=640  sink_4::ypos=360 \
+    sink_5::xpos=1280 sink_5::ypos=360 \
+    sink_6::xpos=0    sink_6::ypos=720 \
+    sink_7::xpos=640  sink_7::ypos=720 \
+    sink_8::xpos=1280 sink_8::ypos=720 ! \
+    kmssink bus-id=fd4a0000.display sync=false \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_0 \
+    filesrc location=cat_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_3 \
+    filesrc location=earth1.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_6 \
+    filesrc location=ocean.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_1 \
+    filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_4  \
+    filesrc location=elephant_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_7 \
+    filesrc location=galaxy.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_2 \
+    filesrc location=tiger.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_5 \
+    filesrc location=penguin_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_8 
+
+4x3 VIDEOS DONT RENDER ON SCREEN
+gst-launch-1.0 compositor name=comp \
+    sink_0::xpos=0    sink_0::ypos=0 \
+    sink_1::xpos=480  sink_1::ypos=0 \
+    sink_2::xpos=960  sink_2::ypos=0 \
+    sink_3::xpos=1440 sink_3::ypos=0 \
+    sink_4::xpos=0    sink_4::ypos=360 \
+    sink_5::xpos=480  sink_5::ypos=360 \
+    sink_6::xpos=960  sink_6::ypos=360 \
+    sink_7::xpos=1440 sink_7::ypos=360 \
+    sink_8::xpos=0    sink_8::ypos=720 \
+    sink_9::xpos=480  sink_9::ypos=720 \
+    sink_10::xpos=960 sink_10::ypos=720 \
+    sink_11::xpos=1440 sink_11::ypos=720 ! \
+    kmssink bus-id=fd4a0000.display sync=false \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=480,height=360 ! queue ! comp.sink_0 \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=480,height=360 ! queue ! comp.sink_1 \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=480,height=360 ! queue ! comp.sink_2 \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=480,height=360 ! queue ! comp.sink_3 \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=480,height=360 ! queue ! comp.sink_4 \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=480,height=360 ! queue ! comp.sink_5 \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=480,height=360 ! queue ! comp.sink_6 \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=480,height=360 ! queue ! comp.sink_7 \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=480,height=360 ! queue ! comp.sink_8 \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=480,height=360 ! queue ! comp.sink_9 \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=480,height=360 ! queue ! comp.sink_10 \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=480,height=360 ! queue ! comp.sink_11
+
+
+PERF ANALYZE
+gst-launch-1.0 filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+perf print-arm-load=true ! kmssink bus-id=fd4a0000.display sync=false
+
+gst-launch-1.0 -v filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+identity silent=false ! kmssink bus-id=fd4a0000.display sync=false
+
+2x2 VIDEOS
+gst-launch-1.0 compositor name=comp sink_0::xpos=0 sink_0::ypos=0 sink_1::xpos=960 sink_1::ypos=0 sink_2::xpos=0 sink_2::ypos=540 sink_3::xpos=960 sink_3::ypos=540 ! kmssink bus-id=fd4a0000.display sync=false filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! perf ! videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_0 filesrc location=earth.mp4 ! qtdemux ! h264parse ! omxh264dec ! perf ! videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_1 filesrc location=ocean.mp4 ! qtdemux ! h264parse ! omxh264dec ! perf ! videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_2 filesrc location=galaxy.mp4  ! qtdemux ! h264parse ! omxh264dec ! perf ! videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=960,height=540 ! queue ! comp.sink_3
+
+gst-launch-1.0 compositor name=comp \
+    sink_0::xpos=0    sink_0::ypos=0 \
+    sink_1::xpos=640  sink_1::ypos=0 \
+    sink_2::xpos=1280 sink_2::ypos=0 \
+    sink_3::xpos=0    sink_3::ypos=360 \
+    sink_4::xpos=640  sink_4::ypos=360 \
+    sink_5::xpos=1280 sink_5::ypos=360 \
+    sink_6::xpos=0    sink_6::ypos=720 \
+    sink_7::xpos=640  sink_7::ypos=720 \
+    sink_8::xpos=1280 sink_8::ypos=720 ! \
+    kmssink bus-id=fd4a0000.display sync=false \
+    filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec  ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_0 \
+    filesrc location=cat_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_3 \
+    filesrc location=earth1.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_6 \
+    filesrc location=ocean.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_1 \
+    filesrc location=panda_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_4  \
+    filesrc location=elephant.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_7 \
+    filesrc location=galaxy.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_2 \
+    filesrc location=tiger.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_5 \
+    filesrc location=penguin_720p.mp4 ! qtdemux ! h264parse ! omxh264dec ! \
+    videoscale method=0 add-borders=false dither=0 ! video/x-raw,width=640,height=360 ! queue ! comp.sink_8 
+
 
 
 1. Method 1 (Bilinear Scaling) (Default) = By default, videoscale uses Bilinear Interpolation. To resize an image from 1080p to 360p, the CPU has to look at a block of pixels say, 4 neighboring pixels, mix their colors together mathematically to find average color, and then write that new pixel.

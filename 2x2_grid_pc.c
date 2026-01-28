@@ -47,7 +47,7 @@ void add_stream_to_compositor(GstElement *pipeline, GstElement *compositor,
   g_object_set(scaler, "method", 0, NULL);
   g_object_set(scaler, "add-borders", FALSE, NULL);
   g_object_set(scaler, "dither", 0, NULL);
-  g_object_set(scaler, "chroma-resampler", 0, NULL);
+  // g_object_set(scaler, "chroma-resampler", 0, NULL);
 
   GstCaps *caps = gst_caps_new_simple(
       "video/x-raw", "width", G_TYPE_INT, 960, "height", G_TYPE_INT, 540, NULL);
@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
     g_printerr("Compositor could not be linked to sink.\n");
     gst_object_unref(pipeline);
     return -1;
-  }
+  } 
 
   add_stream_to_compositor(pipeline, compositor, "videos/animals.mp4", 0, 0);
   add_stream_to_compositor(pipeline, compositor, "videos/earth1.mp4", 960, 0);
