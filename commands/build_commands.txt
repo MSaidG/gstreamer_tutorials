@@ -1,0 +1,14 @@
+HEADLESS RENDERING
+https://xilinx-wiki.atlassian.net/wiki/spaces/A/pages/2709618765/Mali+400+Headless+rendering
+
+GRAPHICS STACK
+https://xilinx-wiki.atlassian.net/wiki/spaces/A/pages/18841928/Zynq+UltraScale+MPSoC+-+Graphics+Driver+Stack+-+Mali+400#Zynq%E2%84%A2UltraScale+%E2%84%A2MPSoC-GraphicsDriverStack-Mali400-RunningGPUapplications:
+
+docker run -it --rm \
+  -v /home/said/Tools/petalinux:/home/said/Tools/petalinux \
+  -w /home/said/Tools/petalinux/tool_2023/simple_video_pipe \
+  plnx-2023 bash
+
+source settings.sh
+petalinux-config -c rootfs
+petalinux-build
