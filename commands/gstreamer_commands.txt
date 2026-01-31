@@ -29,6 +29,8 @@ modetest -D fd4a0000.display -P 39@43:1920x1080@BG24
 media-ctl -v -d /dev/media0 -V "\"a0010000.v_tpg\":0 [fmt:RGB888_1X24/1920x1080 field:none]"
 modetest -D fd4a0000.display -s 45:1920x1080-60.00@BG24 -w 41:"alpha":0
 
+BG24 -> GBM_FORMAT_RGB888  ???
+sudo cat /sys/kernel/debug/dri/1/state
 
 KMSSINK COMMANDS--------------------------------------------------------------------------------------------------------------------->
 gst-launch-1.0 -v filesrc location=animals.mp4 ! qtdemux ! h264parse ! omxh264dec ! kmssink bus-id=fd4a0000.display sync=false
